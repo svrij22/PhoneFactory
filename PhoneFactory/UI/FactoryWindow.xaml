@@ -1,0 +1,34 @@
+﻿<Window x:Class="PhoneFactory.FactoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PhoneFactory"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <!-- row defs-->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- buttons-->
+        <StackPanel Orientation="Horizontal" Margin="5">
+            <Button x:Name="TurnOn" Click="TurnOn_Click">Turn factory on</Button>
+            <Button x:Name="TurnOff" Click="TurnOff_Click">Turn factory off</Button>
+            <Button x:Name="AddPhones" Click="AddPhones_Click">Add 10 phones to queue</Button>
+        </StackPanel>
+        
+        <!-- multiple state machines -->
+        <DataGrid x:Name="stateMachineDG" 
+                  AutoGenerateColumns="False"
+                  Grid.Row="1" ItemsSource="{Binding Machines}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Current state" Binding="{Binding FormattedState}" />
+                <DataGridTextColumn Header="Information" Binding="{Binding Information}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>
