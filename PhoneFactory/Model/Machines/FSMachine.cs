@@ -9,35 +9,49 @@ using System.Timers;
 
 namespace PhoneFactory.Machines
 {
-    public abstract class Machine : INotifyPropertyChanged
+    public abstract class FSMachine : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Use-case specific
+        /// </summary>
         public int QueuedItems { get; set; }
-        public abstract string Name { get; set; } 
+
+        /// <summary>
+        /// UI Formatting
+        /// </summary>
+        public abstract string Name { get; set; }
         public abstract string FormattedState { get; }
         public abstract string Information { get; }
-        public List<State> MyStates { get; set; } = new();
+
+        /// <summary>
+        /// State machine
+        /// </summary>
+        public List<State> States { get; set; } = new();
         public State Current { get; set; }
 
-        public Timer MachineTimer;
+        public static Timer MachineTimer = new();
         public void Start()
         {
-            MachineTimer = new();
-            MachineTimer.Interval = Current.TimeSpan.Seconds * 1000;
+            MachineTimer.Interval = Current.TimeSpan.Milliseconds;
             MachineTimer.Enabled = true;
             MachineTimer.Elapsed += (s, e) =>
             {
-                StateNames next = Current.GetNext();
-                Current = MyStates.First(state => state.This == next);
+                var prevState = Current.Identifier;
+                var nextState = Current.GetNext();
+                Current = States.First(state => state.Identifier == nextState);
 
-                OnPropertyChanged(nameof(Name));
-                OnPropertyChanged(nameof(FormattedState));
+                if (prevState != nextState)
+                {
+                    OnPropertyChanged(nameof(Name));
+                    OnPropertyChanged(nameof(FormattedState));
+                }
+
                 OnPropertyChanged(nameof(Information));
-                MachineTimer.Interval = Current.TimeSpan.Milliseconds;
             };
             MachineTimer.Start();
         }
 
-        public Machine NextMachine { get; set; }
+        public FSMachine NextMachine { get; set; }
 
         // Create the OnPropertyChanged method to raise the event
         // The calling member's name will be used as the parameter.

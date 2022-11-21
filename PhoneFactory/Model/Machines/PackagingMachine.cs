@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace PhoneFactory.Machines
 {
-    public class MicrochipMachine : FSMachine
+    public class PackagingMachine : FSMachine
     {
 
         /// <summary>
@@ -15,7 +15,7 @@ namespace PhoneFactory.Machines
         /// </summary>
         /// 
 
-        public override string Name { get; set; } = "Microchip machine";
+        public override string Name { get; set; } = "Packaging machine";
         public override string FormattedState => Current.Name;
         public override string Information => $"{QueuedItems}/{StartedItems}";
 
@@ -24,7 +24,7 @@ namespace PhoneFactory.Machines
         /// Info
         /// </summary>
         public int StartedItems { get; set; }
-        public MicrochipMachine()
+        public PackagingMachine()
         {
 
             States.Add(new State()
@@ -43,7 +43,7 @@ namespace PhoneFactory.Machines
                     {
                         StartedItems += QueuedItems;
                         QueuedItems = 0;
-                        return MachineState.PreparingMicrochips;
+                        return MachineState.PackagingPhone;
                     }
 
                     return MachineState.PoweredOn;
@@ -56,38 +56,38 @@ namespace PhoneFactory.Machines
                 Name = "Resuming",
                 GetNext = () =>
                 {
-                    return MachineState.PreparingMicrochips;
+                    return MachineState.PackagingPhone;
                 }
             });
 
             States.Add(new State()
             {
-                Identifier = MachineState.PreparingMicrochips,
-                Name = "Preparing microchips",
+                Identifier = MachineState.PackagingPhone,
+                Name = "Packaging phone",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
                         return MachineState.PoweredOff;
-                    return MachineState.EmbeddingCases;
+                    return MachineState.WrappingProducts;
                 }
             });
 
             States.Add(new State()
             {
-                Identifier = MachineState.EmbeddingCases,
-                Name = "Embedding cases",
+                Identifier = MachineState.WrappingProducts,
+                Name = "Wrapping products",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
                         return MachineState.PoweredOff;
-                    return MachineState.AttachWiring;
+                    return MachineState.MarkingPhoneGUID;
                 }
             });
 
             States.Add(new State()
             {
-                Identifier = MachineState.AttachWiring,
-                Name = "Attaching wiring",
+                Identifier = MachineState.MarkingPhoneGUID,
+                Name = "Marking Phone GUID",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)

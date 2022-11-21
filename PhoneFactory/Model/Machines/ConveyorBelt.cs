@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace PhoneFactory.Machines
 {
-    public class ConveyorBelt : Machine
+    public class ConveyorBelt : FSMachine
     {
 
         /// <summary>
@@ -17,7 +17,7 @@ namespace PhoneFactory.Machines
 
         public override string Name { get; set; } = "Conveyor belt";
         public override string FormattedState => Current.Name;
-        public override string Information => $"{QueuedItems}/{StartedSending}";
+        public override string Information => $"{QueuedItems}";
 
 
         /// <summary>
@@ -27,64 +27,58 @@ namespace PhoneFactory.Machines
         public ConveyorBelt()
         {
             //Regular loop
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.PoweredOn,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.PoweredOn,
                 Name = "Powered on. Pending.",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
-                        return StateNames.PoweredOff;
+                        return MachineState.PoweredOff;
 
                     //has items to send?
                     if (QueuedItems > 0)
-                    {
-                        //Set started
-                        StartedSending += QueuedItems;
-                        QueuedItems = 0;
-                        return StateNames.Sending;
-                    }
+                        return MachineState.Sending;
 
-                    return StateNames.PoweredOn;
+                    return MachineState.PoweredOn;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.Sending,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.Sending,
                 Name = "Sending",
                 GetNext = () =>
                 {
 
                     //Send to next machine
                     if (NextMachine != null)
-                        NextMachine.QueuedItems += StartedSending;
-                    StartedSending = 0;
+                    {
+                        NextMachine.QueuedItems += QueuedItems;
+                        QueuedItems = 0;
+                    }
 
                     if (!Factory.IsTurnedOn)
-                        return StateNames.PoweredOff;
-                    return StateNames.PoweredOn;
+                        return MachineState.PoweredOff;
+                    return MachineState.PoweredOn;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.PoweredOff,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.PoweredOff,
                 Name = "Powered off.",
                 GetNext = () =>
                 {
                     if (Factory.IsTurnedOn)
-                        return StateNames.PoweredOn;
-                    return StateNames.PoweredOff;
+                        return MachineState.PoweredOn;
+                    return MachineState.PoweredOff;
                 }
             });
 
 
             //Set first state
-            Current = MyStates.First(state => state.This == StateNames.PoweredOff);
+            Current = States.First(state => state.Identifier == MachineState.PoweredOff);
         }
     }
 }

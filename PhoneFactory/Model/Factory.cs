@@ -9,7 +9,7 @@ namespace PhoneFactory.Machines
 {
     public class Factory
     {
-        public ObservableCollection<Machine> Machines { get; set; }
+        public ObservableCollection<FSMachine> Machines { get; set; }
         public static bool IsTurnedOn { get; set; } = false;
         public void AddMachines()
         {
@@ -31,7 +31,15 @@ namespace PhoneFactory.Machines
             belt2.Start();
             Machines.Add(belt2);
 
-            var depot = new PhoneDepot();
+            var pMach = new PackagingMachine();
+            pMach.Start();
+            Machines.Add(pMach);
+
+            var belt3 = new ConveyorBelt();
+            belt3.Start();
+            Machines.Add(belt3);
+
+            var depot = new PackageDepot();
             depot.Start();
             Machines.Add(depot);
 
@@ -42,7 +50,9 @@ namespace PhoneFactory.Machines
             machine1.NextMachine = belt1;
             belt1.NextMachine = machine2;
             machine2.NextMachine = belt2;
-            belt2.NextMachine = depot;
+            belt2.NextMachine = pMach;
+            pMach.NextMachine = belt3;
+            belt3.NextMachine = depot;
 
         }
     }

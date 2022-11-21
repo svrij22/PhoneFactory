@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace PhoneFactory.Machines
 {
-    public class CoffeeMachine : Machine
+    public class CoffeeMachine : FSMachine
     {
 
         /// <summary>
@@ -23,50 +23,52 @@ namespace PhoneFactory.Machines
         /// <summary>
         /// Info
         /// </summary>
-        public int StartedSending { get; set; }
+        public bool KoffieZetApparaatStaatAan { get; set; }
+        public bool KopjeStaatOnderMachine { get; set; }
         public CoffeeMachine()
         {
             //Regular loop
-            MyStates.Add(new State()
+            States.Add(new State(MachineState.StaatAan, "Koffiezet apparaat staat uit", () =>
             {
-                This = StateNames.A,
-                TimeSpan = TimeSpan.FromSeconds(1),
-                Name = "A.",
-                GetNext = () =>
-                {
-                    return StateNames.B;
-                }
-            });
+                if (!KoffieZetApparaatStaatAan)
+                    return MachineState.StaatUit;
 
-            MyStates.Add(new State()
+                if (KopjeStaatOnderMachine)
+                    return MachineState.ZetKoffie;
+
+                return MachineState.StaatUit;
+            }));
+
+            States.Add(new State(MachineState.ZetKoffie, "Apparaat is koffie aan het zetten...", () =>
             {
-                This = StateNames.B,
-                TimeSpan = TimeSpan.FromSeconds(1),
-                Name = "B.",
-                GetNext = () =>
-                {
-                    if (!Factory.IsTurnedOn)
-                        return StateNames.C;
-                    return StateNames.A;
-                }
-            });
 
-            MyStates.Add(new State()
+                if (!KoffieZetApparaatStaatAan)
+                    return MachineState.StaatUit;
+
+                return MachineState.VerwijderUwBeker;
+            }));
+
+            States.Add(new State(MachineState.VerwijderUwBeker, "Verwijder uw beker...", () =>
             {
-                This = StateNames.C,
-                TimeSpan = TimeSpan.FromSeconds(1),
-                Name = "C.",
-                GetNext = () =>
-                {
-                    if (Factory.IsTurnedOn)
-                        return StateNames.A;
-                    return StateNames.C;
-                }
-            });
 
+                if (KopjeStaatOnderMachine)
+                    return MachineState.VerwijderUwBeker;
+
+                if (!KoffieZetApparaatStaatAan)
+                    return MachineState.StaatUit;
+
+                return MachineState.StaatAan;
+            }));
+
+            States.Add(new State(MachineState.StaatUit, "Koffiezet apparaat staat uit", () =>
+            {
+                if (KoffieZetApparaatStaatAan)
+                    return MachineState.StaatAan;
+                return MachineState.StaatUit;
+            }));
 
             //Set first state
-            Current = MyStates.First(state => state.This == StateNames.A);
+            Current = States.First(state => state.Identifier == MachineState.StaatAan);
         }
     }
 }

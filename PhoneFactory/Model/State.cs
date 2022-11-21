@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PhoneFactory.Machines
 {
-    public enum StateNames
+    public enum MachineState
     {
         //Metal encasing machine
         PoweredOff,
@@ -23,17 +23,30 @@ namespace PhoneFactory.Machines
         PreparingMicrochips,
         EmbeddingCases,
         AttachWiring,
-        B,
-        A,
-        C,
+        ZetKoffie,
+        StaatAan,
+        StaatUit,
+        VerwijderUwBeker,
+        Resuming,
+        PackagingPhone,
+        WrappingProducts,
+        MarkingPhoneGUID,
     }
     public class State
     {
-        public StateNames This;
+
+        public MachineState Identifier;
+        public Func<MachineState> GetNext { get; set; }
 
         public string Name;
 
-        public TimeSpan TimeSpan;
-        public Func<StateNames> GetNext { get; set; }
+        public TimeSpan TimeSpan = TimeSpan.FromMilliseconds(400);
+        public State() { }
+        public State(MachineState identifier, string name, Func<MachineState> getNext)
+        {
+            Identifier = identifier;
+            GetNext = getNext;
+            Name = name;
+        }
     }
 }

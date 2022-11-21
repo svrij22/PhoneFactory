@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace PhoneFactory.Machines
 {
-    public class MetalEncasingMachine : Machine
+    public class MetalEncasingMachine : FSMachine
     {
 
         /// <summary>
@@ -24,84 +24,96 @@ namespace PhoneFactory.Machines
         /// Info
         /// </summary>
         public int StartedCases { get; set; }
+
+        public int RemoveFromQueue(int max)
+        {
+            var amt = Math.Min(max, QueuedItems);
+            QueuedItems -= amt;
+            return amt;
+        }
         public MetalEncasingMachine()
         {
             //Regular loop
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.WarmingUpOven,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.WarmingUpOven,
                 Name = "Warming Oven Up",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
-                        return StateNames.CoolingDown;
-                    return StateNames.WarmedUp;
+                        return MachineState.CoolingDown;
+                    return MachineState.WarmedUp;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.WarmedUp,
-                TimeSpan = TimeSpan.FromSeconds(1),
-                Name = "Warmed up. Ready.",
+                Identifier = MachineState.WarmedUp,
+                Name = "Powered up. Ready.",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
-                        return StateNames.CoolingDown;
+                        return MachineState.CoolingDown;
                     if (QueuedItems > 0)
-                        return StateNames.MeltingMetal;
-                    return StateNames.WarmedUp;
+                        return MachineState.MeltingMetal;
+                    if (StartedCases > 0)
+                        return MachineState.Resuming;
+                    return MachineState.WarmedUp;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.MeltingMetal,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.Resuming,
+                Name = "Resuming",
+                GetNext = () =>
+                {
+                    return MachineState.MeltingMetal;
+                }
+            });
+
+            States.Add(new State()
+            {
+                Identifier = MachineState.MeltingMetal,
                 Name = "Melting metal",
                 GetNext = () =>
                 {
                     //Set started
-                    StartedCases += QueuedItems;
-                    QueuedItems = 0;
+                    StartedCases += RemoveFromQueue(8);
 
                     if (!Factory.IsTurnedOn)
-                        return StateNames.CoolingDown;
-                    return StateNames.MoldingMetal;
+                        return MachineState.CoolingDown;
+                    return MachineState.MoldingMetal;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.MoldingMetal,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.MoldingMetal,
                 Name = "Molding into cases",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
-                        return StateNames.CoolingDown;
-                    return StateNames.CoolingCases;
+                        return MachineState.CoolingDown;
+                    return MachineState.CoolingCases;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.CoolingCases,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.CoolingCases,
                 Name = "Cooling down cases",
                 GetNext = () =>
                 {
                     if (!Factory.IsTurnedOn)
-                        return StateNames.CoolingDown;
-                    return StateNames.SendToBelt;
+                        return MachineState.CoolingDown;
+                    return MachineState.SendToBelt;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.SendToBelt,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.SendToBelt,
                 Name = "Sending to conveyor belt",
                 GetNext = () =>
                 {
@@ -112,49 +124,46 @@ namespace PhoneFactory.Machines
                     StartedCases = 0;
 
                     if (!Factory.IsTurnedOn)
-                        return StateNames.CoolingDown;
-                    return StateNames.WarmedUp;
+                        return MachineState.CoolingDown;
+                    return MachineState.WarmedUp;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.CoolingDown,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.CoolingDown,
                 Name = "Cooling down machine",
                 GetNext = () =>
                 {
-                    return StateNames.PoweredOff;
+                    return MachineState.PoweredOff;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.PoweredOff,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.PoweredOff,
                 Name = "Powered off",
                 GetNext = () =>
                 {
                     if (Factory.IsTurnedOn)
-                        return StateNames.PoweredOn;
-                    return StateNames.PoweredOff;
+                        return MachineState.PoweredOn;
+                    return MachineState.PoweredOff;
                 }
             });
 
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.PoweredOn,
-                TimeSpan = TimeSpan.FromSeconds(1),
+                Identifier = MachineState.PoweredOn,
                 Name = "Powering on machine",
                 GetNext = () =>
                 {
-                    return StateNames.WarmedUp;
+                    return MachineState.WarmedUp;
                 }
             });
 
 
             //Set first state
-            Current = MyStates.First(state => state.This == StateNames.PoweredOff);
+            Current = States.First(state => state.Identifier == MachineState.PoweredOff);
         }
     }
 }

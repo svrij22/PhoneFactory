@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace PhoneFactory.Machines
 {
-    public class PhoneDepot : Machine
+    public class PackageDepot : FSMachine
     {
 
         /// <summary>
@@ -15,7 +15,7 @@ namespace PhoneFactory.Machines
         /// </summary>
         /// 
 
-        public override string Name { get; set; } = "Smartphone depot";
+        public override string Name { get; set; } = "Package depot";
         public override string FormattedState => Current.Name;
         public override string Information => $"{QueuedItems}";
 
@@ -24,22 +24,22 @@ namespace PhoneFactory.Machines
         /// Info
         /// </summary>
         public int StartedSending { get; set; }
-        public PhoneDepot()
+        public PackageDepot()
         {
             //Regular loop
-            MyStates.Add(new State()
+            States.Add(new State()
             {
-                This = StateNames.PoweredOn,
-                TimeSpan = TimeSpan.FromSeconds(1),
-                Name = "Phone depot.",
+                Identifier = MachineState.PoweredOn,
+                TimeSpan = TimeSpan.FromMilliseconds(550),
+                Name = "Package depot.",
                 GetNext = () =>
                 {
-                    return StateNames.PoweredOn;
+                    return MachineState.PoweredOn;
                 }
             });
 
             //Set first state
-            Current = MyStates.First(state => state.This == StateNames.PoweredOn);
+            Current = States.First(state => state.Identifier == MachineState.PoweredOn);
         }
     }
 }
